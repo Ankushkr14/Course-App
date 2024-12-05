@@ -1,10 +1,11 @@
 const express = require('express');
 const { signupValidation, loginValidation } = require('./validationSchema');
-const { userModel } = require('../db');
+const { userModel, courseModel } = require('../db');
 const userRoute = express.Router();
 const bcrypt = require('bcrypt');
 
 const jwt = require('jsonwebtoken');
+const { userMiddleware } = require('../middlewares/auth.user');
 
 userRoute.post('/signup',async (req, res) => {
     const {email, password, firstname, lastname} = req.body;
@@ -70,14 +71,14 @@ userRoute.post('/login',async (req,res)=> {
        
         const token = jwt.sign({
             id: user._id
-        },process.env.JWT_USER_KEY,{expiresIn: '1h'});
+        },process.env.USER_KEY,{expiresIn: '1h'});
         
 
         res.cookie('userToken',token,{
             httpOnly: true,
             secure: false,
             maxAge:3600000,
-            sameSite:'strict'
+            sameSite:'Strict'
         })
         res.json({
             message:"Login successfully",
@@ -91,10 +92,26 @@ userRoute.post('/login',async (req,res)=> {
 
 })
 
-userRoute.get('/purchases', (req,res)=>{
-    res.json({
-        message: "user purchase"
-    })
+userRoute.get('/purchases',userMiddleware, async (req,res)=>{
+    try{
+        const userId = req.userId;
+
+        const purchase = await coursesPurchasedModel.find({userId});
+    
+        let purchaseCourse = [];
+        for(let i =0; i<purchase.length;i++){
+            purchaseCourse.push(purchase[i].courseId);
+        }
+        const courseData = await courseModel.find({
+            _id: { $in: purchaseCourse},
+        })
+        res.json({
+            purchase,
+            courseData
+        })
+    }catch(err){
+        res.json({message: err.message});
+    }
 })
 
 module.exports= {

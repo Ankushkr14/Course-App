@@ -82,7 +82,7 @@ const purchaseSchema = Schema({
         type: Date,
         default: Date.now,
     },
-    userID: {
+    userId: {
         type: Types.ObjectId,
         required: true,
         ref: 'User'

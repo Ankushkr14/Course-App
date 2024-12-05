@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken')
-const { JWT_USER_KEY} = require('../config')
+const cookieParser = require('cookie-parser');
 
 const userMiddleware = (req, res, next) =>{
 
-    const token = req.headers.token;
+    const token = req.cookies.token;
 
     if(!token){
         res.json({
@@ -13,8 +13,8 @@ const userMiddleware = (req, res, next) =>{
 
     try{
 
-        const decoded = jwt.verify(token, JWT_USER_KEY);
-        req.userId = decoded.userId;
+        const decoded = jwt.verify(token, process.env.USER_KEY);
+        req.userId = decoded.id;
         next();
 
     }catch(err){
